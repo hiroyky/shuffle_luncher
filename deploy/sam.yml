@@ -1,0 +1,221 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'shuffle luncher'
+
+Parameters:
+  DynamoDBTableName:
+    Type: String
+  SlackChannelId:
+    Type: String
+  TheBaseNumberOfGroupMembers:
+    Type: Number
+    Default: 4
+  TheNumberOfDaysUntilNext:
+    Type: Number
+    Default: 7
+  NotifyDay:
+    Type: Number
+    Default: 1
+  
+Globals:
+  Function:
+    Environment:
+      Variables:
+        SLACK_CHANNEL_ID: !Ref SlackChannelId
+        DYNAMODB_TABLE_NAME: !Ref DynamoDBTableName
+        THE_BASE_NUMBER_OF_GROUP_MEMBERS: !Ref TheBaseNumberOfGroupMembers
+        THE_NUMBER_OF_DAYS_UTIL_NEXT: !Ref TheNumberOfDaysUntilNext
+        NOTIFY_DAY: !Ref NotifyDay
+        THE_DAY_OF_WEEK: 2
+        THE_DEADLINE_DAY_OF_WEEK: 4
+
+Resources:
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: staging
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          version: "1.0.0"
+          title: "shuffle_luncher_api"
+        basePath: "/staging"
+        schemes:
+        - "https"
+        paths:
+          /interaction:
+            post:
+              produces:
+              - "application/json"
+              responses:
+                "200":
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+              x-amazon-apigateway-integration:
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Interaction.Arn}/invocations"
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
+        definitions:
+          Empty:
+            type: "object"
+            title: "Empty Schema"
+
+  AskForAbsent:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.askForAbsent
+      FunctionName: shuffle_luncher-askForAbsent
+      Runtime: nodejs6.10
+      CodeUri: ../artifacts/src
+      Description: ''
+      MemorySize: 128
+      Timeout: 10
+      Events:
+        Schedule1:
+          Type: Schedule
+          Properties:
+            Schedule: 'cron(0 16 ? * 3#3 *)'
+        Schedule2:
+          Type: Schedule
+          Properties:
+            Schedule: 'cron(0 16 ? * 3#1 *)'
+      Policies:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "dynamodb:PutItem"
+              - "dynamodb:GetItem"
+              - "dynamodb:Scan"
+              - "dynamodb:UpdateItem"
+            Resource: 
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTableName}"
+          - Effect: Allow
+            Action:
+              - "logs:CreateLogStream"
+              - "logs:PutLogEvents"
+              - "logs:CreateLogGroup"
+            Resource: "arn:aws:logs:*:*:*"
+          - Effect: Allow
+            Action:
+              - "ssm:GetParameter"
+              - "ssm:GetParameters"
+            Resource: 
+              - !Sub "arn:aws:ssm:*:*:parameter/shuffle_luncher_slack_token"
+
+
+  ShuffleMembers:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.shuffleMembers
+      FunctionName: shuffle_luncher-shuffleMembers
+      Runtime: nodejs6.10
+      CodeUri: ../artifacts/src
+      Description: ''
+      MemorySize: 128
+      Timeout: 10
+      Events:
+        Schedule1:
+          Type: Schedule
+          Properties:
+            Schedule: 'cron(0 14 ? * 2#2 *)'
+        Schedule2:
+          Type: Schedule
+          Properties:
+            Schedule: 'cron(0 14 ? * 2#4 *)'
+      Policies:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "logs:CreateLogStream"
+              - "logs:PutLogEvents"
+              - "logs:CreateLogGroup"
+            Resource: "arn:aws:logs:*:*:*"
+          - Effect: Allow
+            Action:
+              - "dynamodb:PutItem"
+              - "dynamodb:GetItem"
+              - "dynamodb:Scan"
+              - "dynamodb:UpdateItem"
+            Resource: 
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTableName}"
+          - Effect: Allow
+            Action:
+              - "ssm:GetParameter"
+              - "ssm:GetParameters"
+            Resource: 
+              - !Sub "arn:aws:ssm:*:*:parameter/shuffle_luncher_slack_token"
+
+  Interaction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.interactoinHandler
+      FunctionName: shuffle_luncher-interaction
+      Runtime: nodejs6.10
+      CodeUri: ../artifacts/src
+      Description: ''
+      MemorySize: 128
+      Timeout: 10
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /interaction
+            Method: POST
+            RestApiId: !Ref ApiGateway
+      Policies:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "logs:CreateLogStream"
+              - "logs:PutLogEvents"
+              - "logs:CreateLogGroup"
+            Resource: "arn:aws:logs:*:*:*"
+          - Effect: Allow
+            Action:
+              - "dynamodb:PutItem"
+              - "dynamodb:GetItem"
+              - "dynamodb:Scan"
+              - "dynamodb:UpdateItem"
+            Resource: 
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTableName}"
+          - Effect: Allow
+            Action:
+              - "ssm:GetParameter"
+              - "ssm:GetParameters"
+            Resource: 
+              - !Sub "arn:aws:ssm:*:*:parameter/shuffle_luncher_slack_token"
+
+  InteractionPermission:
+    Type: 'AWS::Lambda::Permission'
+    DependsOn:
+      - ApiGateway
+      - Interaction
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref Interaction
+      Principal: apigateway.amazonaws.com  
+
+  GroupsDynamoDBTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      AttributeDefinitions:
+      - 
+        AttributeName: user
+        AttributeType: S
+      ProvisionedThroughput:
+        WriteCapacityUnits: 1
+        ReadCapacityUnits: 1
+      KeySchema:
+      - 
+        KeyType: HASH
+        AttributeName: user
+      TableName: !Ref DynamoDBTableName
