@@ -1,0 +1,34 @@
+{
+  "name": "shuffle_luncher",
+  "version": "1.0.0",
+  "description": "Shuffle luncher using AWS Serverless Architecture",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "node ./build/build.js",
+    "test": "mocha -r ts-node/register ./test/**/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hiroyky/shuffle_luncher.git"
+  },
+  "author": "Hirokazu Yokoyama (hiroyky)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hiroyky/shuffle_luncher/issues"
+  },
+  "homepage": "https://github.com/hiroyky/shuffle_luncher#readme",
+  "devDependencies": {
+    "@types/chai": "^4.1.3",
+    "@types/mocha": "^5.2.0",
+    "@types/sinon": "^4.3.1",
+    "chai": "^4.1.2",
+    "child_process": "^1.0.2",
+    "mocha": "^5.1.1",
+    "sinon": "^4.5.0",
+    "ts-node": "^6.0.1",
+    "typescript": "^2.8.3"
+  }
+}
