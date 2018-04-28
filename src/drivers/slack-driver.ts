@@ -1,5 +1,6 @@
 import { WebClient, ChatPostMessageArguments, ChatUpdateArguments } from '@slack/client';
 import Env from '../env';
+import { User, OriginalMessage, Attachment } from '../models';
 
 export default class {
     protected web = new WebClient();
@@ -31,7 +32,7 @@ export default class {
                 ]
             });
             arg.attachments.push({
-                callback_id: `members-${(date.getTime() / 1000)}`,
+                callback_id: this.getAttachmentId(date),
                 text: ''
             });
         });
@@ -39,7 +40,29 @@ export default class {
         this.postMessage(arg);
     }
 
+    async updateAttedanceMembers(attedanceMembers: User[], date: Date, org: OriginalMessage) {
+        const arg: any = Object.assign({}, org, {
+            token: this.env.slackToken,
+            channel: this.env.slackChannelId
+        });
+        const attachments = arg.attachments as Attachment[];
+        const index = attachments.findIndex((el, i, arr) => el.callback_id === this.getAttachmentId(date));
+        attachments[index] = {
+            text: `${attedanceMembers.map(m => m.displayName ? m.displayName : m.name).join(', ')}`,
+            callback_id: attachments[index].callback_id,
+        };
+        this.update(arg);
+    }
+
     protected async postMessage(arg: ChatPostMessageArguments) {
         return await this.web.chat.postMessage(arg);
+    }
+
+    protected async update(arg: ChatUpdateArguments) {
+        return await this.web.chat.update(arg);
+    }
+
+    protected getAttachmentId(date:Date): string {
+        return  `members-${(date.getTime() / 1000)}`;
     }
 }
