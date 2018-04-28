@@ -200,8 +200,7 @@ Resources:
     Type: 'AWS::DynamoDB::Table'
     Properties:
       AttributeDefinitions:
-      - 
-        AttributeName: user
+      - AttributeName: slack_id
         AttributeType: S
       ProvisionedThroughput:
         WriteCapacityUnits: 1
@@ -209,5 +208,5 @@ Resources:
       KeySchema:
       - 
         KeyType: HASH
-        AttributeName: user
+        AttributeName: slack_id
       TableName: !Ref DynamoDBTableName

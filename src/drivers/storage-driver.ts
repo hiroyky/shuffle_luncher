@@ -31,7 +31,7 @@ export default class {
         };
         const result = await this.db.scan(param).promise();
         if(result.Items === undefined) {
-            throw new AWSError(`failed to scan Users ${param}`);
+            throw new Error(`failed to scan Users ${param}`);
         }
         return result.Items.map(item => new User(item));
     }
@@ -45,7 +45,7 @@ export default class {
                 "#date": util.getAttendanceFieldName(date)
             },
             ExpressionAttributeValues: {
-                ":date": isAttendance
+                ":attendace": isAttendance
             },
             ReturnValues: 'NONE'
         };
