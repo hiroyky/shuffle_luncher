@@ -66,11 +66,11 @@ Resources:
             type: "object"
             title: "Empty Schema"
 
-  AskForAbsent:
+  askForAttendanceDates:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Handler: index.askForAbsent
-      FunctionName: shuffle_luncher-askForAbsent
+      Handler: index.askForAttendanceDates
+      FunctionName: shuffle_luncher-askForAttendanceDates
       Runtime: nodejs6.10
       CodeUri: ../artifacts/src
       Description: ''
@@ -88,14 +88,6 @@ Resources:
       Policies:
         Version: "2012-10-17"
         Statement:
-          - Effect: Allow
-            Action:
-              - "dynamodb:PutItem"
-              - "dynamodb:GetItem"
-              - "dynamodb:Scan"
-              - "dynamodb:UpdateItem"
-            Resource: 
-              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTableName}"
           - Effect: Allow
             Action:
               - "logs:CreateLogStream"
