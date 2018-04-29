@@ -30,6 +30,11 @@ export async function interactoinHandler(event: APIGatewayEvent, context: Contex
         await memberManager.updateAttendanceOrNot(req.eventTriggeredUser, req.eventTriggeredDate);
         const attendanceUsers = await memberManager.getAttendaceMembers(req.eventTriggeredDate);
         slackDriver.updateAttedanceMembers(attendanceUsers, req.eventTriggeredDate, req.originalMessage);
+        callback(null, {
+            statusCode: '200',
+            headers: { 'Content-Type': 'application/json' },
+            body: ''
+        });
     } catch(err) {
         console.error(err);
     }
