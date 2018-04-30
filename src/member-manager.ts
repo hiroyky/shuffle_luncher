@@ -15,8 +15,12 @@ export default class {
         await this.storageDriver.updateUserAttedance(user.id, date, dstValue);
     }
 
+    async getMembersWith(candidates: Date[]): Promise<User[]> {
+        return await this.storageDriver.scanUsers(candidates);
+    }
+
     async getAttendaceMembers(date: Date): Promise<User[]> {
-        const users = await this.storageDriver.scanUsers();
+        const users = await this.storageDriver.scanUsers([date]);
         return users.filter(user => user.isAttendance(date));
     }
 }
