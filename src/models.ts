@@ -4,7 +4,6 @@ export interface AskEvent {
     /** 開催年 */
     heldYear?: number;
 
-
     /** 開催月(js式 1月が0, 12月が11) */
     heldMonth?: number;
 
@@ -13,6 +12,21 @@ export interface AskEvent {
 
     /** アンケートの回答期限 */
     answerExpires: string;
+}
+
+export interface ShuffleEvent {
+    /** 開催年 */
+    heldYear?: number;
+
+    /** 開催月(js式 1月が0, 12月が11) */
+    heldMonth?: number;
+
+    /** 開催曜日(js式 日曜が0, 土曜が6) */
+    heldDay: number;
+
+    heldNum?: number;
+
+    unit?: number;
 }
 
 export class HttpError extends Error {
@@ -93,5 +107,31 @@ export class User implements IUser {
     isAttendance(date:Date): boolean {
         const val = this.data[StorageUtil.getAttendanceFieldName(date)];
         return val === true;
+    }
+
+    countAttedances(dates: Date[]): number {
+        return dates.filter(d => this.isAttendance(d)).length;
+    }
+}
+
+export interface UsersPerDate {
+    heldDate: Date;
+    users: User[];
+}
+
+export interface ParticipantGroup extends UsersPerDate {
+    groupName: string;
+}
+
+export class ParticipantGroupList extends Array<ParticipantGroup> {
+    heldDate: Date = new Date();
+}
+
+export class UsersPerDateList extends Array<UsersPerDate> {
+    countUserParticipant(user:User): number {
+        return this.filter(val => 
+            val.users.findIndex((el, i, arr) => 
+                el.slackId === user.slackId) >= 0
+        ).length;
     }
 }

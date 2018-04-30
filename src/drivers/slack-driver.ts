@@ -1,6 +1,6 @@
 import { WebClient, ChatPostMessageArguments, ChatUpdateArguments } from '@slack/client';
 import Env from '../env';
-import { User, OriginalMessage, Attachment } from '../models';
+import { User, OriginalMessage, Attachment, ParticipantGroupList } from '../models';
 
 export default class {
     protected web = new WebClient();
@@ -54,6 +54,24 @@ export default class {
         this.update(arg);
     }
 
+    async notifyGropus(groupList: ParticipantGroupList[]) {
+        const arg: any = {
+            token: this.env.slackToken,
+            channel: this.env.slackChannelId,
+            text: 'シャッフルランチのメンバはこちらです．',
+            attachments: groupList.map(groups => {
+                return {
+                    title: `${this.getDateStr(groups.heldDate)}`,
+                    text: groups.map(g => 
+                        `${g.groupName}: ${g.users.map(u => 
+                            u.displayName ? u.displayName : u.name).join(', ')}`)
+                        .join('\r\n')
+                }
+            })
+        };
+        this.postMessage(arg);
+    }
+
     protected async postMessage(arg: ChatPostMessageArguments) {
         return await this.web.chat.postMessage(arg);
     }
@@ -64,5 +82,9 @@ export default class {
 
     protected getAttachmentId(date:Date): string {
         return  `members-${(date.getTime() / 1000)}`;
+    }
+
+    protected getDateStr(date:Date): string {
+        return `${date.getMonth()+1}月${date.getDate()}日`;
     }
 }
