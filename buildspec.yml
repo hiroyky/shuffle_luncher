@@ -1,7 +1,4 @@
 version: 0.2
-env:
-  variables:
-    S3_BUCKET: ${S3_DEPLOY_BUCKET}
 phases:
   install:
     commands:
@@ -17,8 +14,8 @@ phases:
       - npm run test
   build:
     commands:
-      - npm run package
-      - aws cloudformation package --template-file deploy/sam.yml --s3-bucket ${S3_BUCKET} --output-template-file artifacts/sam.yml
+      - npm run build
+      - aws cloudformation package --template-file deploy/sam.yml --s3-bucket $S3_DEPLOY_BUCKET --output-template-file artifacts/sam.yml
 
   post_build:
     commands:
