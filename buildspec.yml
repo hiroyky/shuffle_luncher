@@ -1,0 +1,29 @@
+version: 0.2
+env:
+  variables:
+    S3_BUCKET: ${S3_DEPLOY_BUCKET}
+phases:
+  install:
+    commands:
+      - echo Installing Mocha...
+      - npm install -g mocha typescript npm
+      - tsc --version
+      - npm --version
+      - echo Installing source NPM dependencies...
+      - npm install
+  pre_build:
+    commands:
+      - echo Compiling the Node.js code
+      - npm run test
+  build:
+    commands:
+      - npm run package
+      - aws cloudformation package --template-file deploy/sam.yml --s3-bucket ${S3_BUCKET} --output-template-file artifacts/sam.yml
+
+  post_build:
+    commands:
+      - echo Build completed on `date`                                   
+artifacts:
+  discard-paths: yes
+  files:
+    - artifacts/sam.yml
