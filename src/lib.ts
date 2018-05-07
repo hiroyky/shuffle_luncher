@@ -104,7 +104,9 @@ export function divideIntoGroups<T>(array: Array<T>, unit:number): Array<Array<T
         teams[index].push(array[i]);
     }
     const tailTeam = teams[teams.length - 1];
-    if(tailTeam.length < unit && tailTeam.length < teams.length - 1) {
+    if(tailTeam === undefined) {
+        return teams;
+    } else if(tailTeam.length < unit && tailTeam.length < teams.length - 1) {
         const remainders = tailTeam;
         let teamIndex = 0;
         for(const r of remainders) {

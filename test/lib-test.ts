@@ -101,4 +101,10 @@ describe('divideIntoGroups', () => {
         const expected = [['a', 'b', 'c', 'd', 'e'],['f', 'g', 'h','i', 'j'], ['k', 'l', 'm', 'n', 'o'], ['p','q', 'r', 's']];
         assert.deepEqual(actual, expected);
     });
+    it('要素なし', () => {
+        const src =  new Array<string>();
+        const actual = lib.divideIntoGroups(src, 5);
+        const expected = new Array<Array<string>>();
+        assert.deepEqual(actual, expected);
+    });
 });
